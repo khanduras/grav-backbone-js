@@ -1,0 +1,11 @@
+email: qualakon@gmail.com
+fullname: Daniel
+title: Webmaster
+state: enabled
+access:
+  admin:
+    login: true
+    super: true
+  site:
+    login: true
+hashed_password: $2y$10$2CgJ4Gzj10w3nml8Z4P3Bub7cSqlPOPGYEorbDoqfIewn9ACHSL6C

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en" class="uk-height-1-1">
+<head>
+{% block head %}
+    <meta charset="utf-8" />
+    <title>{% if header.title %}{{ header.title|e('html') }} | {% endif %}{{ site.title|e('html') }}</title>
+    {% include 'partials/metadata.html.twig' %}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="icon" type="image/png" href="{{ theme_url }}/images/favicon.png" />
+
+    {% block stylesheets %}
+
+        {% do assets.addCss('theme://css/style.css') %}
+        
+    {% endblock %}
+    {{ assets.css() }}
+
+
+    {% block js_libraries %}
+        {% do assets.addJs('jquery',101) %}
+        {% do assets.addJs('theme://js/underscore-min.js',100) %}
+        {% do assets.addJs('theme://js/backbone-min.js',100) %}
+    {% endblock %}
+    {% block javascripts %}
+        {% do assets.addJs('theme://js/scripts/Backbone.View.js',100) %}
+        {% do assets.addJs('theme://js/scripts/ContentView.js',100) %}
+        {% do assets.addJs('theme://js/custom.js',100) %}
+
+    {% endblock %}
+    {{ assets.js() }}
+
+{% endblock head%}
+</head>
+<body id="top" class="{{ page.header.body_classes }}">
+    <div class="wrapper">    
+        {% block header %}            
+
+            {% block navbar %}
+                <!-- Inside navbar is navigation -->
+                {% include 'partials/navbar.html.twig' %}
+            {% endblock %}
+
+            {% block offcanvas%}
+
+                <div id="offMenu" class="uk-offcanvas">
+                    <div class="uk-offcanvas-bar">
+                        {% if meta.sidebar_title %}<li class="uk-nav-header">{{ meta.sidebar_title }}</li>{% endif %}
+                        {% include 'partials/off-canvas.html.twig' %}
+                        </ul>
+                    </div>
+                </div>
+
+            {% endblock %}
+
+        {% endblock %}
+
+        {% block showcase %}{% endblock %}
+
+            <br />
+
+        {% block body %}
+            <div class='uk-container uk-container-center'>
+                {% if form.message %}
+                    <div class="uk-alert"><a href="" class="uk-alert-close uk-close"></a>{{ form.message }}</div>
+                {% endif %}
+                <section id="content" class="{{ class }}{% if config.themes.interact.animateOnPageLoad %} hidden{% endif %}">
+                   {% block content %}{% endblock %}
+                </section>
+                <div id="body" class="{{ class }}"></div>
+            </div>                
+        {% endblock %}
+
+    </div>
+
+    {% block footer %}
+        {% include 'partials/footer.html.twig' %}
+    {% endblock %}
+
+    {% block bottom %}
+
+    {% endblock %}
+
+    {% block search_bottom %}
+
+        <script>
+            var input = $('#searchInput');
+
+            var searchDown = $.UIkit.search($('#dropSource'), { 
+                source: function(release) {
+                    var json = [];
+
+                    request = $.ajax({
+                        type: 'GET',
+                        url: '{{ base_url }}/search.json/query:' + input.val(),
+                        dataType: 'html',
+                        async: false
+                    });
+
+                    request.done(function(response, textStatus, jqXHR) { 
+                        json = $.parseJSON(response);
+                        release(json);                                            
+                    });          
+                    
+                },
+                delay: 300,
+                minLength: 3 
+
+            });
+
+            UIkit.ready(function() {
+              UIkit.$('#dd').on('show.uk.dropdown', function (event) {
+
+              });
+            });
+
+            jQuery(document).ready(function($){
+
+
+                $('#dropSource').on('submit', function(event) {
+                    event.preventDefault();
+                    window.location.assign($('[data-search-input]').data('search-input') + '{{ config.system.param_sep }}' + $('#searchInput').val());
+                });
+
+                $('[data-search-input]').on('keypress', function(event) {
+                    if (event.which == 13) {
+                        event.preventDefault();
+                        if ($(this).val().length > 2) {
+                            window.location.href = $(this).data('search-input') + '{{ config.system.param_sep }}' + $(this).val();
+                        }
+                    }
+                });
+
+                {% if config.themes.interact.animateOnPageLoad %}
+                    $('section.hidden').fadeIn(1000).removeClass('hidden');
+                {% endif %}
+
+            });
+
+        </script>  
+
+    {% endblock %}
+
+    {% block backbone %}
+   
+        <script>
+
+        var AppRouter = Backbone.Router.extend({
+
+            initialize: function(el) {
+                this.el = el;
+
+                this.indexView = new ContentView({template: '#index'});
+                this.toolsView = new ContentView({template: '#tools'});
+                this.toolView = new ContentView({template: '#tools'});
+                this.formsView = new ContentView({template: '#forms'});
+                this.alertsView = new ContentView({template: '#alerts'});
+            },
+            routes: {
+                "" : "index",
+                "tools" : "tools",
+                "tools/:toolid" : "tool",
+                "forms" : "forms",
+                "alerts" : "alerts",
+            },
+            index: function () {
+                $('.navbar-child').addClass('hidden');
+                $('.navbar-front_page').removeClass('hidden');
+                this.switchView(this.indexView);
+            },
+            tools: function () {
+                $('.navbar-child').removeClass('hidden');
+                $('.navbar-front_page').addClass('hidden');
+                this.switchView(this.toolsView);
+            },
+            tool: function (toolid) {
+                $('.navbar-child').removeClass('hidden');
+                $('.navbar-front_page').addClass('hidden');
+                this.switchView(this.toolView);
+            },
+            forms: function () {
+                $('.navbar-child').removeClass('hidden');
+                $('.navbar-front_page').addClass('hidden');
+                this.switchView(this.formsView);
+            },
+            alerts: function () {
+                $('.navbar-child').removeClass('hidden');
+                $('.navbar-front_page').addClass('hidden');
+                this.switchView(this.alertsView);
+            },
+
+            currentView: null,
+
+            switchView: function(view, parameter) {
+                if (this.currentView) {
+                    // Detach the old view
+                    this.currentView.remove();
+                }
+                $( "section#content" ).remove();
+                // Move the view element into the DOM (replacing the old content)
+                this.el.html(view.el);
+                
+
+
+                // Render view after it is in the DOM (styles are applied)
+                view.render();
+
+                this.currentView = view;
+            },
+
+            current : function() {
+                var Router = this,
+                    fragment = Backbone.history.fragment,
+                    routes = _.pairs(Router.routes),
+                    route = null, params = null, matched;
+
+                matched = _.find(routes, function(handler) {
+                    route = _.isRegExp(handler[0]) ? handler[0] : Router._routeToRegExp(handler[0]);
+                    return route.test(fragment);
+                });
+
+                if(matched) {
+                    // NEW: Extracts the params using the internal
+                    // function _extractParameters 
+                    params = Router._extractParameters(route, fragment);
+                    route = matched[1];
+                }
+
+                return {
+                    route : route,
+                    fragment : fragment,
+                    params : params
+                };
+            },
+            
+        });
+
+         
+        var app = new AppRouter();
+         
+        $(document).ready(function() {
+            var router = new AppRouter($('div#body'));
+            Backbone.history.start();
+        });
+
+        </script>
+
+
+    {% endblock %}
+
+    {% block templates %}
+    <!-- Templates -->
+
+    {% macro loop(page) %}
+        {% for child_page in page.children.visible %}
+        <script id="{{ child_page.title|lower }}" type="text/html">
+            <h1>{{ child_page.title|humanize }}</h1>
+            <div class="uk-grid">
+                <div class="uk-width-1-1">
+                    <p>
+                        {{ child_page.content }}
+                    </p>
+                </div>
+            </div>
+        </script>
+        {% if child_page.children.visible.count > 0 %}
+            {{ _self.loop(child_page) }}
+        {% endif %}
+        {% endfor %}
+    {% endmacro %}
+    {{ _self.loop(pages) }}
+
+
+
+
+
+
+    {% endblock %}
+ 
+</body>
+</html>

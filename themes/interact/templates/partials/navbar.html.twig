@@ -1,0 +1,75 @@
+<nav class="uk-navbar uk-navbar-attached" {% if config.themes.interact.navbar.sticky.enabled %}data-uk-sticky="{top:0}"{% endif %}>
+    <div class="uk-navbar-content">
+        
+        {% set buttons = page.find('/extras/menus/navbar').header.child_pages.buttons %}
+        {% if buttons %}
+            <div class="uk-button-group navbar-child hidden navbar-buttons">
+        {% endif %}
+            
+                <a href="#my-id" class="uk-button" data-uk-offcanvas="{target:'#offMenu'}"><i class="uk-icon-bars"></i> Menu</a>
+                {% for button in buttons %}
+                    {% if button.url %} 
+                        <a class="uk-button navbar-button {% if button.class %}{{ button.class }}{% endif %}" href="{% if button.ignore_hash %}{% else %}#{% endif %}{{ page.parent.url }}" style="{% if button.back_color %}background: {{ button.back_color }};{% endif %}{% if button.fore_color %}color: {{ button.fore_color }};{% endif %}">{% if button.icon %}<i class="uk-icon-{{ button.icon }}"></i> {% endif %}{% if button.title %}{{ button.title }}{% endif %}</a>
+                    {% endif %}
+                {% endfor %}
+         
+        {% if buttons %} 
+            </div>
+        {% endif %}
+    
+    
+        {% set buttons = page.find('/extras/menus/navbar').header.front_page.buttons %}
+        {% if buttons %}
+            <div class="uk-button-group navbar-front_page hidden navbar-buttons">
+        {% endif %}
+     
+                <a href="#my-id" class="uk-button" data-uk-offcanvas="{target:'#offMenu'}"><i class="uk-icon-bars"></i> Menu</a>
+                {% for button in buttons %}
+                    {% if button.url %} 
+                        <a class="uk-button navbar-button {% if button.class %}{{ button.class }}{% endif %}" href="{% if button.ignore_hash %}{% else %}#{% endif %}{{ button.url }}" style="{% if button.back_color %}background: {{ button.back_color }};{% endif %}{% if button.fore_color %}color: {{ button.fore_color }};{% endif %}">{% if button.icon %}<i class="uk-icon-{{ button.icon }}"></i> {% endif %}{% if button.title %}{{ button.title }}{% endif %}</a>
+                    {% endif %}
+                {% endfor %}
+
+        {% if buttons %} 
+            </div>
+        {% endif %}
+
+    </div>
+
+
+
+    {% block header_extra %}{% endblock %}
+    {% block header_navigation %}
+      <!--  {% include 'partials/navigation.html.twig' %} -->
+    {% endblock %}
+
+    {% set show_onpage_menu = header.onpage_menu == true %}
+    {% macro pageLinkName(text) %}{{ text|lower|replace({' ':'_'}) }}{% endmacro %}
+    {% if show_onpage_menu %}
+    <div class="uk-hidden-medium uk-hidden-small uk-navbar-flip">
+        <ul class="uk-navbar-nav uk-width-1-1" data-uk-scrollspy-nav="{closest: 'li', smoothscroll: true}">
+         {% for module in page.collection() %}
+            {% if module.menu %}<li><a href="#{{ _self.pageLinkName(module.menu) }}">{{ module.menu }}</a></li>{% endif%}
+        {% endfor %}
+        </ul>
+    </div>
+    {% else %}
+        <div class="uk-container uk-navbar-flip">
+            <div id="dropDownLength">
+                <form id="dropSource" class="uk-search uk-form uk-form-icon" data-uk-search>
+                    <i class="uk-icon-search"></i> 
+                    <input id="searchInput" class="uk-form-large uk-width-10-10" type="search" value="{{ query }}" placeholder="{{ config.themes.library.searchPlaceHolder }}" data-search-input="{{ base_url_relative }}{{ config.plugins.simplesearch.route}}/query">
+                    <div id="dd" class="uk-dropdown uk-dropdown-search" data-uk-dropdown="{justify:'#dropSource'}"></div>
+                </form> 
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="uk-navbar-center">
+            
+    </div>
+
+    <div class="uk-navbar-flip">
+
+    </div>
+</nav> 

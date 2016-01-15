@@ -1,0 +1,13 @@
+enabled: true
+built_in_css: true
+route: /search
+template: simplesearch_results
+filters:
+  category:
+    - tools
+    - forms
+    - alerts
+filter_combinator: or
+order:
+  by: date
+  dir: desc

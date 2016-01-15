@@ -1,0 +1,166 @@
+{% extends 'partials/simplesearch_base.html.twig' %}
+
+{% block navbar %}
+
+<nav class="uk-navbar uk-navbar-attached" {% if config.themes.interact.navbar.sticky.enabled %}data-uk-sticky="{top:0}"{% endif %}>
+    <div class="uk-navbar-content">
+    {% set buttons = page.find('/extras/search-results').header.navbar.buttons %}
+    {% if buttons %}
+        <div class="uk-button-group">
+    {% endif %}
+            <a href="#my-id" class="uk-button" data-uk-offcanvas="{target:'#offMenu'}"><i class="uk-icon-bars"></i> Menu</a>
+            {% for button in buttons %}
+                {% if button.url %} 
+                    <a class="uk-button {% if button.class %}{{ button.class }}{% endif %}" href="{{ button.url }}" style="{% if button.back_color %}background: {{ button.back_color }};{% endif %}{% if button.fore_color %}color: {{ button.fore_color }};{% endif %}">{% if button.icon %}<i class="uk-icon-{{ button.icon }}"></i> {% endif %}{% if button.title %}{{ button.title }}{% endif %}</a>
+                {% endif %}
+            {% endfor %}
+    {% if buttons %} 
+        </div>
+    {% endif %}
+
+    </div>
+
+    {% block header_extra %}{% endblock %}
+    {% block header_navigation %}
+      <!--  {% include 'partials/navigation.html.twig' %} -->
+    {% endblock %}
+
+    {% set show_onpage_menu = header.onpage_menu == true %}
+    {% macro pageLinkName(text) %}{{ text|lower|replace({' ':'_'}) }}{% endmacro %}
+    {% if show_onpage_menu %}
+    <div class="uk-hidden-medium uk-hidden-small uk-navbar-flip">
+        <ul class="uk-navbar-nav uk-width-1-1" data-uk-scrollspy-nav="{closest: 'li', smoothscroll: true}">
+         {% for module in page.collection() %}
+            {% if module.menu %}<li><a href="#{{ _self.pageLinkName(module.menu) }}">{{ module.menu }}</a></li>{% endif%}
+        {% endfor %}
+        </ul>
+    </div>
+    {% else %}
+        <div class="uk-container uk-navbar-flip">
+            <div id="dropDownLength">
+                <form id="dropSource" class="uk-search uk-form uk-form-icon" data-uk-search>
+                    <i class="uk-icon-search"></i> 
+                    <input id="searchInput" class="uk-form-large uk-width-10-10" type="search" value="{{ query }}" placeholder="{{ config.themes.interact.searchPlaceHolder }}" data-search-input="{{ base_url_relative }}{{ config.plugins.simplesearch.route}}/query">
+                    <div id="dd" class="uk-dropdown uk-dropdown-search" data-uk-dropdown="{justify:'#dropSource'}"></div>
+                </form> 
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="uk-navbar-center">
+            
+    </div>
+
+    <div class="uk-navbar-flip">
+
+    </div>
+</nav> 
+
+{% endblock %}
+
+{% block content %}
+    <div class="content-padding simplesearch">
+    <h1 class="search-header">Search Results</h1>
+
+    <p>Query: <strong>{{ query }}</strong> found {{ search_results.count }} {{ 'result'|pluralize(search_results.count) }}</p>
+
+        
+            
+    {% if search_results.count > 0 %}
+        <div class="uk-grid uk-grid-small">
+            <div class="uk-width-1-1">
+                <ul id="results_grid" class="uk-grid uk-container uk-container-center" data-uk-grid> 
+                    <li>
+                        <ul id="category-filter" class="uk-navbar-content uk-subnav uk-subnav-pill">
+                            <li class="uk-disabled uk-grid-width-small-1-1"><a>Categories:</a></li>
+                            <li class="uk-active uk-grid-width-small-1-1" data-uk-filter=""><a href="#">All</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <ul id="tag-filter" class="uk-navbar-content uk-subnav uk-subnav-pill">
+                            <li class="uk-disabled uk-grid-width-small-1-1"><a>Keywords:</a></li>
+                            <li class="uk-active uk-grid-width-small-1-1" data-uk-filter=""><a href="#">All</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="uk-grid uk-grid-small">
+            <div class="uk-width-1-1">
+                <div class="uk-container uk-container-center">          
+                    <div id="searchContent">
+                        <div class="uk-grid-width-small-1-1 uk-grid-width-medium-1-2 uk-grid-width-large-1-3 tm-grid-heights" data-uk-grid="{gutter: 20, controls: '#results_grid'}">
+                            {% for page in search_results %}
+                                {% include 'partials/simplesearch_item.html.twig' with {'page':page} %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    </div>
+    <p class="uk-clearfix">
+        <br>  
+    </p>
+
+{% endblock %}
+
+{% block bottom %}
+
+    <script type="text/javascript">
+
+        function highlightSearch(element) {
+            var text = "{{ query }}";
+            var query = new RegExp("(\\b" + text + "\\b)", "gim");
+            var e = element.innerHTML;
+            var enew = e.replace(/(<span>|<\/span>)/igm, "");
+            element.innerHTML = enew;
+            var newe = enew.replace(query, "<span>$1</span>");
+            element.innerHTML = newe;
+
+        }
+
+        var categories = [];
+        var tags = [];
+
+        {% for page in search_results %}
+
+            {% for category in page.taxonomy.category %}
+
+                if($.inArray("{{ category }}", categories) > -1){
+
+
+                } else {
+                        $("#category-filter").append('<li class="uk-grid-width-small-1-1" data-uk-filter="category-filter-{{ category }}"><a href="#">{{ category|humanize }}</a></li>');
+                        categories.push("{{ category }}");
+
+                }
+
+            {% endfor %}
+
+            {% for tag in page.taxonomy.tag %}
+
+                if($.inArray("{{ tag }}", tags) > -1){
+
+
+                } else {
+                    $("#tag-filter").append('<li class="uk-grid-width-small-1-1" data-uk-filter="tag-filter-{{ tag }}"><a href="#">{{ tag|humanize }}</a></li>');
+                        tags.push("{{ tag }}");
+
+                }
+
+            {% endfor %}
+
+            highlightSearch(document.getElementById("{{ page.date }}"));
+
+        {% endfor %}
+         
+    </script>
+
+{% endblock %}
+
+{% block backbone %}
+
+{% endblock %}    
